@@ -1,5 +1,7 @@
-import requests
 import pandas as pd
+import sqlalchemy
+from sqlalchemy.orm import sessionmaker
+from private import database
 
 
 URL_CSV = 'https://raw.githubusercontent.com/owid/covid-19-data/master/public/data/owid-covid-data.csv'
@@ -21,5 +23,14 @@ df_vaccinations_locations = df_locations[['location', 'vaccines', 'last_observat
 
 
 full_data = df_covid_vaccinations.merge(df_vaccinations_locations)
-print(full_data)
-full_data.to_csv('data/full_data_vaccinations.csv')
+
+engine = sqlalchemy.create_engine(database)
+conn = engine.connect()
+Session = sessionmaker(bind=engine)
+session = Session()
+
+try:
+    full_data.to_sql('covid_19_data', engine, index=False, if_exists='append')
+except:
+    raise
+
